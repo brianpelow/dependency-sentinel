@@ -1,0 +1,45 @@
+name: Dependency Triage
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "GitHub owner to scan (defaults to this repo's owner)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+      - name: Sync
+        run: uv sync
+      - name: Run triage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          TARGET="${{ github.event.inputs.target }}"
+          if [ -z "$TARGET" ]; then TARGET="${{ github.repository_owner }}"; fi
+          uv run sentinel run --github "$TARGET" \
+            --state state/sentinel.state.json \
+            --out-dir out
+      - name: Commit report and state
+        run: |
+          git config user.name "dependency-sentinel"
+          git config user.email "actions@github.com"
+          git add out/ state/ || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore(sentinel): triage report $(date -u +%Y-%m-%d)"
+            git push
+          fi

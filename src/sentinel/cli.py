@@ -13,6 +13,7 @@ import os
 import sys
 from pathlib import Path
 
+from sentinel.config import resolve
 from sentinel.discover import GitHubClient, from_github, from_local
 from sentinel.emit import to_json, to_markdown
 from sentinel.engine import EngineConfig, run_with_delta
@@ -78,6 +79,13 @@ def _run(args) -> int:
     return 0
 
 
+def _posture(args) -> int:
+    import json
+    cfg = resolve(offline=args.offline, no_llm=args.no_llm)
+    print(json.dumps(cfg.posture_summary(), indent=2))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="sentinel",
@@ -96,10 +104,16 @@ def main() -> int:
     run_p.add_argument("--fail-on-critical", action="store_true",
                        help="Exit non-zero if any critical-risk dependency is found.")
 
+    posture_p = sub.add_parser("posture", help="Show the network egress and secret posture.")
+    posture_p.add_argument("--offline", action="store_true")
+    posture_p.add_argument("--no-llm", action="store_true")
+
     args = parser.parse_args()
 
     if args.command == "run":
         return _run(args)
+    if args.command == "posture":
+        return _posture(args)
 
     parser.print_help()
     return 0

@@ -18,7 +18,7 @@ report.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sentinel import osv
 from sentinel.llm import LLMClient, narrate
@@ -34,7 +34,7 @@ from sentinel.state import Delta, StateStore, compute_delta
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 @dataclass

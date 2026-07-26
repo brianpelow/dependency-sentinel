@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 
-from sentinel.models import RiskLevel, TriageReport
+from sentinel.models import TriageReport
 from sentinel.state import Delta
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import httpx
-
 from packaging import version as pkgversion
 
 from sentinel.models import Dependency, RegistryFacts
